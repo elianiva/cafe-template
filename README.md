@@ -1,6 +1,10 @@
-# Effect + Foldkit + Cloudflare template
+# Cafe
 
-A strict, extensible full-stack starter for Effect, Foldkit, and Cloudflare Workers. The website and the API are separate apps. Alchemy composes them into one deployment, with a service binding routing same-origin API requests to the backend.
+Cloudflare · Alchemy · Foldkit · Effect.
+
+A strict, extensible full-stack starter. The name is the stack: Cloudflare for the runtime, Alchemy for infrastructure and deployment, Foldkit for the UI, and Effect for the server and the shared contract.
+
+The website and the API are separate apps. Alchemy composes them into one deployment, with a service binding routing same-origin API requests to the backend.
 
 ## Apps and packages
 
