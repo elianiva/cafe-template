@@ -1,4 +1,17 @@
 {
   "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "plugins": [
+      {
+        "name": "@effect/language-service",
+        "overrides": [
+          {
+            "include": ["src/**/*.ts"],
+            "options": { "allowedUnstableApis": ["effect/rpc"] }
+          }
+        ]
+      }
+    ]
+  },
   "include": ["src/**/*.ts"]
 }

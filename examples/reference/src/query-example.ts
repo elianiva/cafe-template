@@ -4,15 +4,22 @@ import { AsyncData, Update } from 'foldkit'
 import type { Document, HtmlBuilder } from 'foldkit/html'
 import { Query } from 'foldkit/experimental'
 import { defineMessageUnion } from 'foldkit/message'
+import { ApiError, SystemStatus } from '@template/rpc'
 import { ApiRpc } from './platform/rpc.ts'
 
 export const statusQuery = Query.define({
   name: 'SystemStatus',
-  data: Schema.Struct({ message: Schema.String }),
-  error: Schema.String,
+  data: SystemStatus,
+  error: ApiError,
   execute: Effect.gen(function* () {
     const rpc = yield* ApiRpc
-    return yield* rpc.systemStatusGet().pipe(Effect.mapError(String))
+    return yield* rpc.systemStatusGet().pipe(
+      // A transport failure is not a declared API failure, so give it the same
+      // shape and let the view render one error type.
+      Effect.mapError((error) =>
+        error._tag === 'RpcClientError' ? new ApiError({ message: error.message }) : error,
+      ),
+    )
   }),
 })
 
@@ -61,7 +68,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => {
             h.h2([], ['API Worker']),
             AsyncData.matchData(data, {
               onEmpty: () => h.p([], ['Loading API status…']),
-              onFailure: (error) => h.p([h.Class('error')], [error]),
+              onFailure: (error) => h.p([h.Class('error')], [error.message]),
               onData: ({ message }) => h.p([], [message]),
             }),
           ],

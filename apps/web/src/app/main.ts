@@ -43,6 +43,15 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
         [
           h.h2([], ['A clean starting point']),
           h.p([], ['Use the reference example to explore the RPC and Foldkit Query flow.']),
+          model.ready
+            ? h.p(
+                [h.Class('status'), h.Role('status'), h.AriaLive('polite')],
+                ['Message handled. The update function returned a new model.'],
+              )
+            : h.button(
+                [h.Class('action'), h.Type('button'), h.OnClick(Message.ClickedContinue())],
+                ['Run the update loop'],
+              ),
         ],
       ),
     ],

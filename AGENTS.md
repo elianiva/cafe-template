@@ -15,6 +15,7 @@ This repository is a pnpm monorepo for an Effect + Foldkit application deployed 
 
 - Keep the browser from importing `apps/backend` or platform-specific modules.
 - Keep RPC schemas and errors in `packages/rpc`; keep handlers and internal models in `apps/backend`.
+- Keep unstable Effect APIs inside the tsconfig allowlist for their file. See `docs/guardrails.md` before you widen one.
 - Use Foldkit Query for retained remote data. Loading and revalidation decisions belong in Foldkit update handlers.
 - Add a workspace package only for a real reusable or independently owned boundary.
 - Keep Cloudflare services out of the starter unless a concrete feature needs them.
@@ -27,7 +28,7 @@ This repository is a pnpm monorepo for an Effect + Foldkit application deployed 
 - `pnpm typecheck`, `pnpm test`, and `pnpm build` run through Turbo.
 - `pnpm deploy` changes Cloudflare infrastructure. Do not run it without explicit approval.
 
-See `docs/architecture.md` and `docs/tooling.md` before changing workspace boundaries or tool ownership.
+See `docs/architecture.md` and `docs/tooling.md` before changing workspace boundaries or tool ownership. `docs/guardrails.md` lists the rules this repository enforces and the check behind each one.
 
 <!-- BEGIN:turborepo-agent-rules -->
 

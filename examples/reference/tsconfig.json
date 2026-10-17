@@ -1,7 +1,18 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "types": ["vite/client"]
+    "types": ["vite/client"],
+    "plugins": [
+      {
+        "name": "@effect/language-service",
+        "overrides": [
+          {
+            "include": ["src/platform/**/*.ts"],
+            "options": { "allowedUnstableApis": ["effect/rpc"] }
+          }
+        ]
+      }
+    ]
   },
   "include": ["src/**/*.ts", "vite.config.ts"]
 }

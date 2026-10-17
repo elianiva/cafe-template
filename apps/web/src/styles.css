@@ -67,3 +67,42 @@ h1 {
   color: #52617a;
   line-height: 1.6;
 }
+
+.action {
+  margin-top: 1.25rem;
+  padding: 0.65rem 1.1rem;
+  border: 1px solid #172033;
+  border-radius: 0.6rem;
+  background: #172033;
+  color: #f8fafc;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    transform 120ms ease;
+}
+
+.action:hover {
+  background: #2b3a55;
+  border-color: #2b3a55;
+}
+
+.action:active {
+  transform: translateY(1px);
+}
+
+.action:focus-visible {
+  outline: 2px solid #172033;
+  outline-offset: 2px;
+}
+
+.card .status {
+  margin-top: 1rem;
+  padding-left: 0.9rem;
+  border-left: 2px solid #172033;
+  color: #172033;
+  font-family: ui-monospace, monospace;
+  font-size: 0.85rem;
+}

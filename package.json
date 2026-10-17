@@ -3,11 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "prepare": "lefthook install",
+    "prepare": "lefthook install && effect-tsgo patch --skip-missing",
     "dev": "alchemy dev",
     "dev:reference": "alchemy dev --stage reference",
     "build": "turbo run build",
-    "build:reference": "pnpm --dir examples/reference build",
     "check": "vp check",
     "fmt": "vp fmt",
     "fmt:check": "vp fmt --check",
@@ -18,6 +17,9 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "5.20261008.1",
+    "@effect/language-service": "0.87.5",
+    "@effect/tsgo": "0.53.3",
+    "@template/rpc": "workspace:*",
     "@types/node": "26.6.4",
     "alchemy": "2.0.0-beta.81",
     "effect": "4.0.0",
