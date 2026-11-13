@@ -20,6 +20,14 @@ jobs:
     env:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || vars.CLOUDFLARE_ACCOUNT_ID }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      # Sentry is optional. A deploy without a DSN ships with the SDK off.
+      VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN || vars.VITE_SENTRY_DSN }}
+      # The commit is the release that errors, traces, and source maps point at.
+      VITE_SENTRY_RELEASE: ${{ github.sha }}
+      # Only the build uploads source maps. Without the token, org, and project it skips the upload.
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      SENTRY_ORG: ${{ secrets.SENTRY_ORG || vars.SENTRY_ORG }}
+      SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT || vars.SENTRY_PROJECT }}
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6

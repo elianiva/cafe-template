@@ -10,6 +10,14 @@ The website and the API are separate apps. Alchemy composes them into one
 deployment, with a service binding routing same-origin API requests to the
 backend.
 
+The starter also includes:
+
+- A Foldkit RPC client that is already wired into the app.
+- Sentry errors, traces, and profiles in the browser, and errors and traces in
+  both Workers. Without a DSN the SDK stays off.
+- A per-IP rate limit at the website Worker that fails open.
+- A D1 store recipe, a platform adapter seam, and a manual deploy workflow.
+
 ## Apps and packages
 
 - `apps/web` — Foldkit application, website Worker, and static assets.
@@ -45,6 +53,15 @@ It updates the package scope, the Alchemy stack name, page titles, the favicon
 label, the test URL, and the README heading. It skips `pnpm-lock.yaml`; the
 install refreshes it.
 
+## Environment
+
+Copy `.env.example` to `.env`. Sentry is optional: without a DSN the browser and
+both Workers keep the SDK off. The source-map upload also needs
+`SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, and `SENTRY_PROJECT`.
+
+The rate limit is declared in `alchemy.run.ts`. Change its `namespaceId` to a
+value that is unique in your Cloudflare account.
+
 ## Verify a change
 
 ```sh
@@ -77,4 +94,4 @@ The API Worker has no `workers.dev` URL. The website reaches it through its serv
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+GPL-3.0-or-later. See [LICENSE](LICENSE).

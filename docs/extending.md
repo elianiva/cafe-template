@@ -78,6 +78,11 @@ Effect.mapError((error) =>
 Match on `_tag`, not `instanceof`. `_tag` survives serialization; the prototype
 does not.
 
+Sentry receives failures reported by the Effect runtime and the Worker edges.
+`apps/backend/src/handler.ts` filters `ApiError` before it reaches the issue
+stream, so a declared answer stays out. A context uses `Effect.withSpan` when it
+needs a span. It does not import Sentry.
+
 ## Add a bounded context
 
 Give the context its own folder, its own RPC group, a store interface, and a

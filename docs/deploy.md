@@ -59,9 +59,14 @@ template should not deploy itself when someone pushes.
 1. Add `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` as repository secrets.
    The workflow also reads `CLOUDFLARE_ACCOUNT_ID` from a repository variable if
    you prefer.
-2. Create an environment named `production` in the repository settings. Add the
+2. Add `VITE_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, and
+   `SENTRY_PROJECT` if you want Sentry. The workflow sets
+   `VITE_SENTRY_RELEASE` to the commit. Sentry is optional: without a DSN the
+   deploy ships with the SDK off, and without the token, org, and project the
+   source maps are not uploaded.
+3. Create an environment named `production` in the repository settings. Add the
    same secrets there if you want the environment to own them.
-3. Run the `Deploy` workflow from the Actions tab.
+4. Run the `Deploy` workflow from the Actions tab.
 
 The workflow runs `pnpm install --frozen-lockfile`, then
 `pnpm exec alchemy deploy --stage prod --yes`. It does not run the checks. Let
@@ -87,7 +92,7 @@ resource in `alchemy.run.ts`:
 const Website = Cloudflare.Website.Foldkit('Website', {
   rootDir: 'apps/web',
   main: 'src/worker.ts',
-  env: { API: ApiWorker },
+  env: { API: ApiWorker, ...sentryEnv, ...rateLimits },
   assets: { runWorkerFirst: [`${API_PREFIX}/*`] },
   ...(stage === 'prod' && {
     domain: {
@@ -95,7 +100,7 @@ const Website = Cloudflare.Website.Foldkit('Website', {
       redirects: ['www.example.com'],
     },
   }),
-  compatibility,
+  compatibility: sentryCompatibility,
   observability,
 })
 ```

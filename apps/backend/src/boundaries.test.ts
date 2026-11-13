@@ -10,8 +10,8 @@ const webRoot = join(repositoryRoot, 'apps/web/src')
 const rpcRoot = join(repositoryRoot, 'packages/rpc/src')
 
 /** Adapters the deployment owns; contexts must stay platform-agnostic. */
-const importsAdapter =
-  /(?:\bfrom\s+|\bimport\s*\(?\s*)['"](?:alchemy(?:\/|['"])|@alchemy\.run\/|cloudflare:|@cloudflare\/|wrangler)/
+const importsHostAdapter =
+  /(?:\bfrom\s+|\bimport\s*\(?\s*)['"](?:alchemy(?:\/|['"])|@alchemy\.run\/|cloudflare:|@cloudflare\/|@sentry\/|wrangler)/
 
 /** A context sees a store interface. The implementation lives in `platform`. */
 const importsPlatform = /(?:\bfrom\s+|\bimport\s*\(?\s*)['"](?:\.{1,2}\/)+platform\//
@@ -23,6 +23,10 @@ const importsBackend =
 /** The contract is shared by both apps, so it must not depend on either. */
 const importsApp =
   /(?:\bfrom\s+|\bimport\s*\(?\s*)['"](?:@template\/(?:web|backend|reference)|(?:\.{1,2}\/)+apps\/)/
+
+/** The browser must not import a host adapter. Sentry is a browser SDK, so it is allowed. */
+const importsAdapter =
+  /(?:\bfrom\s+|\bimport\s*\(?\s*)['"](?:alchemy(?:\/|['"])|@alchemy\.run\/|cloudflare:|@cloudflare\/|wrangler)/
 
 /**
  * `@cloudflare/workers-types` is ambient in this package, so a context can name
@@ -61,7 +65,7 @@ const scan = async (
 
 test('backend contexts do not depend on the host platform', async () => {
   const { sources, violations } = await scan(contextsRoot, (text) => {
-    if (importsAdapter.test(text)) return 'imports an Alchemy or Cloudflare adapter'
+    if (importsHostAdapter.test(text)) return 'imports an Alchemy, Cloudflare, or Sentry adapter'
     if (importsPlatform.test(text)) return 'imports a platform adapter'
     if (namesHostType.test(text)) return 'names a Cloudflare global type'
     return undefined

@@ -8,7 +8,9 @@
         "overrides": [
           {
             "include": ["src/handler.ts", "src/worker.ts", "src/worker.test.ts"],
-            "options": { "allowedUnstableApis": ["effect/rpc", "effect/http"] }
+            "options": {
+              "allowedUnstableApis": ["effect/rpc", "effect/http", "effect/ErrorReporter"]
+            }
           }
         ]
       }

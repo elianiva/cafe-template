@@ -1,7 +1,7 @@
 {
   "name": "effect-foldkit-cloudflare-template",
   "private": true,
-  "license": "MIT",
+  "license": "GPL-3.0-or-later",
   "type": "module",
   "scripts": {
     "prepare": "lefthook install && effect-tsrs patch --oxlint",
@@ -20,6 +20,7 @@
   "devDependencies": {
     "@cloudflare/workers-types": "5.20261008.1",
     "@effect/language-service": "0.87.5",
+    "@sentry/rollup-plugin": "11.11.0",
     "@template/rpc": "workspace:*",
     "@types/node": "26.6.4",
     "@yielded/effect-tsrs": "0.2.3",

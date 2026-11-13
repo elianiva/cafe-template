@@ -42,18 +42,24 @@ entry that builds the handler from its bindings and exports `fetch`.
 import host adapters, the browser does not import backend code, and the wire
 contract does not import either app.
 
+## Rate limits
+
+The website Worker applies a per-IP limit before it reaches the service binding. `RATE_LIMIT_API` is declared in `alchemy.run.ts` and bound to the `Website` env. The worker keys the bucket on `CF-Connecting-IP`, fails open when the binding is missing or throws, and answers a refused request with `429` and `Retry-After`. Change `namespaceId` to a value that is unique in your Cloudflare account.
+
 ## Telemetry
 
-Observability is configured on the host resources in `alchemy.run.ts`, never in contexts. Both Workers sample logs and traces at 0.1. Raise both `headSamplingRate` values while you debug a specific request, and keep the compatibility date at `2026-07-28` or later, which traces require.
+Sentry records errors, traces, and profiles. The browser starts it in `apps/web/src/platform/sentry.ts`; both Workers wrap their entries with `Sentry.withSentry`. The Workers need `nodejs_compat`, which `sentryCompatibility` sets. `apps/backend/src/handler.ts` provides the Effect error reporter, tracer, and logger, so a span from a context becomes a Sentry span. `ApiError` is a declared answer and stays out of the issue stream.
 
-To nest Effect spans in the same waterfall, provide `Cloudflare.Telemetry()` from Alchemy. That layer is a binding, so it needs the inline Worker form: the entry module must default-export `Cloudflare.Worker(...)` with an init effect. This template keeps `src/worker.ts` as a plain module, so Effect spans are not mirrored today. If you adopt the layer, omit `observability.traces` on that Worker: the binding contributes it, and an explicit value wins.
+Cloudflare Workers Observability keeps logs only, sampled at 0.1. Traces are off so a request is traced once. Set `VITE_SENTRY_DSN` and `VITE_SENTRY_RELEASE` to turn Sentry on; without a DSN the browser and both Workers run with the SDK off. `SENTRY_AUTH_TOKEN` uploads hidden source maps from the build.
+
+The browser sends trace headers to `/api/` only. The website Worker passes them through the service binding, so one trace covers the browser, both Workers, and the API handler.
 
 ## Code ownership
 
-- `apps/web/src/app` owns the Foldkit application. Remote data belongs in Foldkit Query submodels. Update handlers decide when to load or revalidate them. `apps/web/src/platform` owns the RPC client and other browser APIs.
+- `apps/web/src/app` owns the Foldkit application. Remote data belongs in Foldkit Query submodels. Update handlers decide when to load or revalidate them. `apps/web/src/platform` owns the RPC client and the browser Sentry setup.
 - `apps/backend/src/contexts` is the home for server-side bounded contexts as product vocabulary is discovered. Do not pre-invent product domains in the scaffold.
 - `apps/backend/src/platform` owns host adapters: D1 queries, Durable Objects, R2 reads, and the structural types they expose.
-- `apps/backend/src/handler.ts` owns RPC composition. `apps/backend/src/worker.ts` is the runtime entry.
+- `apps/backend/src/handler.ts` owns RPC composition and the Sentry Effect layers. `apps/backend/src/worker.ts` is the runtime entry that wraps the handler with Sentry.
 - `packages/rpc` owns the public wire contract only: Effect RPC groups, request/response schemas, declared errors, and the API path prefix.
 - `examples/reference` shows a complete Query-to-RPC path in a separate website app. It keeps its own RPC client because it deploys separately; `apps/web/src/platform/rpc.ts` is the client the default app uses. Run it with `pnpm dev:reference`, which uses the root Alchemy entrypoint with the `reference` stage; it is deliberately excluded from the default stack.
 

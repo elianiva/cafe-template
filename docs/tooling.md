@@ -13,6 +13,7 @@
 | `tsrs`                     | Rust port of the TypeScript 7 compiler; type checks in `pnpm typecheck`       |
 | `effect-tsrs`              | Effect diagnostics on `tsrs` and the Effect Oxlint preset                     |
 | `@effect/language-service` | Effect diagnostics config and editor support, including `allowedUnstableApis` |
+| Sentry                     | Browser and Worker errors, traces, profiles, and hidden source-map upload     |
 
 Use `pnpm check` for the Vite+ checks. Use `pnpm typecheck`, `pnpm test`, and `pnpm build` for Turbo tasks. Do not add standalone Prettier or ESLint configurations alongside Vite+.
 

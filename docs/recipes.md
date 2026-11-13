@@ -148,9 +148,13 @@ export const handlerFor = (input: HandlerInput) =>
         ),
       ),
       Layer.provideMerge(RpcSerialization.layerJson),
+      Layer.provide(SentryLive),
     ),
   )
 ```
+
+Keep the `SentryLive` layer from the starter. The snippet only adds the store
+and the notes context.
 
 The Worker builds the handler from its binding and keeps it for the isolate:
 
@@ -182,7 +186,8 @@ export default {
 ```
 
 Import the two handler layers in `worker.ts`, or let `handlerFor` take a
-`HandlerInput` built in `entry.ts`. Keep the binding at the edge.
+`HandlerInput` built in `entry.ts`. Keep the binding at the edge, and keep the
+`Sentry.withSentry` wrapper from the starter around the export.
 
 ### 6. Test the store
 

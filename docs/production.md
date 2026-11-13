@@ -1,17 +1,33 @@
 # Production
 
-The starter ships a small production baseline: sampled observability, security
-headers, immutable caching for hashed assets, and a crash reporter hook. This
-page lists the rest of the settings to review before real traffic.
+The starter ships errors, traces, profiles, per-IP rate limits, security
+headers, and immutable caching for hashed assets. Sentry stays off until you set
+a DSN, so a clone of the template sends nothing. This page lists the settings to
+review before real traffic.
 
 ## Observability
 
-`alchemy.run.ts` samples logs and traces at 0.1 and keeps them in Cloudflare.
-One request in ten is enough to see a launch spike. Raise both rates while you
-debug a specific request, then lower them again.
+Sentry is wired into the browser and both Workers:
 
-If you add Sentry or another tracer, turn Cloudflare traces off so a request is
-recorded once. Keep logs on.
+- `apps/web/src/platform/sentry.ts` starts the browser SDK, reports crashes and
+  slow Foldkit phases, and turns Effect spans into Sentry spans.
+- `apps/backend/src/handler.ts` provides the Effect error reporter, tracer, and
+  logger. It keeps `ApiError` out of the issue stream because a declared answer
+  is not a fault.
+- Both Worker entries wrap `fetch` with `Sentry.withSentry`.
+- `alchemy.run.ts` adds `nodejs_compat`, passes the DSN and release to the
+  Workers, and runs the Rollup plugin that uploads API source maps.
+- `apps/web/vite.config.ts` uploads the browser source maps when
+  `SENTRY_AUTH_TOKEN` is set.
+
+Set `VITE_SENTRY_DSN` and `VITE_SENTRY_RELEASE` in the deploy environment.
+`VITE_SENTRY_RELEASE` should be the commit. Add `SENTRY_AUTH_TOKEN`,
+`SENTRY_ORG`, and `SENTRY_PROJECT` to upload hidden source maps. Without all three the build skips
+the upload. Without a DSN the SDK stays off.
+
+Cloudflare Workers Observability keeps logs only, sampled at 0.1. Traces are off
+so a request is traced once. Sentry samples traces at 10%, follows the browser's
+choice through the service binding, and profiles 5% of sessions.
 
 ## Security headers and caching
 
@@ -22,65 +38,37 @@ recorded once. Keep logs on.
 - `Cache-Control: public, max-age=0, must-revalidate` for documents.
 - `Cache-Control: public, max-age=31536000, immutable` for `/assets/*`.
 
-Tune the CSP when you add a font, an image host, or a script. Keep
-`frame-ancestors 'none'` unless you embed the app. The reference app has its own
-`_headers` and a `robots.txt` that blocks indexing.
+Tune the CSP when you add a font, an image host, or a script. The default
+`connect-src` already allows Sentry ingest; remove it when you remove Sentry.
+Keep `frame-ancestors 'none'` unless you embed the app. The reference app has its
+own `_headers` and a `robots.txt` that blocks indexing.
 
 ## Rate limits
 
-The default stack has no rate limit. Add one at the website Worker when the API
-is public and has no accounts. The binding fails open in the example so a
-limiter outage does not stop the app.
+`alchemy.run.ts` declares `RATE_LIMIT_API` and binds it to the website Worker.
+`apps/web/src/worker.ts` keys the bucket on `CF-Connecting-IP` before the service
+binding. The default is 60 requests per 60 seconds.
 
-```ts
-const rateLimits = {
-  RATE_LIMIT_API: Cloudflare.RateLimit('RateLimitApi', {
-    namespaceId: 7301,
-    simple: { limit: 60, period: 60 },
-  }),
-}
-```
-
-Add the binding to the `Website` env, then check it in `apps/web/src/worker.ts`
-before the service binding:
-
-```ts
-interface RateLimitBinding {
-  limit(options: { key: string }): Promise<{ success: boolean }>
-}
-
-const allowed = async (binding: RateLimitBinding | undefined, key: string) => {
-  if (binding === undefined) return true
-  try {
-    return (await binding.limit({ key })).success
-  } catch {
-    return true
-  }
-}
-```
-
-Return `429` with `Retry-After` when the limit refuses a request. Pick a
-`namespaceId` that is unique in the account.
+The limiter fails open. A missing binding (local dev) or a limiter outage allows
+the request. A refused request gets `429` with `Retry-After`. Change
+`namespaceId` to a value that is unique in your Cloudflare account, and raise the
+limit when the app makes more than a handful of API calls a minute.
+`apps/web/src/worker.test.ts` covers allowed, refused, and fail-open requests.
 
 ## Error reporting
 
-`apps/web/src/entry.ts` passes a `crash.report` hook to
-`Runtime.makeApplication`. It logs to the console today. Replace it with Sentry,
-Bugsnag, or your own endpoint.
+`apps/web/src/entry.ts` calls `startSentry()` before the runtime starts, then
+passes `reportCrash` and `reportSlow` to Foldkit. A crash paints Foldkit's crash
+view and reaches Sentry with the Message tag. A slow phase is sent as a
+`foldkit.slow_ms` distribution.
 
-For Sentry on the Workers, add `nodejs_compat` to the compatibility flags:
+The API Worker reports Effect failures through `ErrorReporter` in
+`apps/backend/src/handler.ts`. Store and transport failures reach Sentry. An
+`ApiError` does not, because it is the declared answer to a bad request.
 
-```ts
-const sentryCompatibility = {
-  ...compatibility,
-  flags: ['nodejs_compat'],
-}
-```
-
-Wrap both Worker entries with `Sentry.withSentry`, upload hidden source maps from
-the build, and set the release to the commit. Keep `ApiError` out of the issue
-stream: it is a declared answer, not a fault. Report store and transport failures
-instead.
+Set the DSN in production to turn this on. Use the Sentry release to connect an
+error to the commit, and keep the source map upload token in the deploy
+environment only.
 
 ## Analytics
 
@@ -122,9 +110,12 @@ test the migration on a staging stage first.
 - [ ] The `CI` workflow is green on the commit you deploy.
 - [ ] `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are set for the deploy.
 - [ ] The `production` environment has the secrets it needs.
+- [ ] `VITE_SENTRY_DSN` and `VITE_SENTRY_RELEASE` are set, and source maps upload with `SENTRY_AUTH_TOKEN`.
 - [ ] The custom domain is attached only to `prod`.
 - [ ] The API Worker has no `workers.dev` URL.
 - [ ] `_headers` matches the assets and third-party hosts you actually use.
-- [ ] Sampling is set for the expected traffic.
-- [ ] A failed request reaches your error reporter.
+- [ ] The rate-limit namespace is unique and the limit matches the app's traffic.
+- [ ] Cloudflare log sampling and the Sentry trace and profile rates match the expected traffic.
+- [ ] A failed request reaches Sentry, and a declared `ApiError` does not.
+- [ ] A request over the limit gets `429` with `Retry-After`.
 - [ ] A rollback commit is known.

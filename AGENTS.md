@@ -20,6 +20,8 @@ This repository is a pnpm monorepo for an Effect + Foldkit application deployed 
 - Use Foldkit Query for retained remote data. Loading and revalidation decisions belong in Foldkit update handlers.
 - Add a workspace package only for a real reusable or independently owned boundary.
 - Keep Cloudflare services out of the starter unless a concrete feature needs them.
+- Sentry lives at the app edges: the browser platform module, the Worker entries, and the Effect layers in `handler.ts`. Contexts use `Effect.withSpan` and never import Sentry. `ApiError` stays out of the issue stream.
+- The website Worker rate limit fails open when its binding is missing or throws.
 - Use only `tsrs` and `effect-tsrs` for diagnostics. Never run `tsc` or `tsgo`; do not add `typescript` or turn on `typeCheck` in `vite.config.ts`.
 - If `vp lint` fails after an install that skipped scripts, run `pnpm exec effect-tsrs patch --oxlint`.
 - Run `pnpm rename <name>` once, before the first feature, to replace the template's package scope and stack name.
