@@ -62,6 +62,15 @@ both Workers keep the SDK off. The source-map upload also needs
 The rate limit is declared in `alchemy.run.ts`. Change its `namespaceId` to a
 value that is unique in your Cloudflare account.
 
+## Orbs
+
+The repository ships two executable scripts for Amp orbs. `.agents/setup`
+installs the pinned Node.js and pnpm versions if they are missing, copies
+`.env.example` to `.env` without overwriting an existing file, installs the
+workspace dependencies, and patches Oxlint with the Effect rules. `.agents/resume`
+repairs the Git hooks, the Oxlint patch, and a missing `.env` after an orb wakes.
+It does not reinstall dependencies.
+
 ## Verify a change
 
 ```sh
