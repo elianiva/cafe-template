@@ -7,9 +7,9 @@ step() {
 
 step 'Check Node.js version'
 node --eval '
-const [major, minor] = process.versions.node.split(".").map(Number)
-if (major < 24 || (major === 24 && minor < 11)) {
-  console.error(`Node.js ${process.versions.node} is too old; this repo requires 24.11 or newer.`)
+const [major] = process.versions.node.split(".").map(Number)
+if (major < 26) {
+  console.error(`Node.js ${process.versions.node} is too old; this repo requires 26 or newer.`)
   process.exit(1)
 }
 console.log(`Node.js ${process.versions.node}`)
@@ -24,3 +24,6 @@ pnpm --version
 
 step 'Install workspace dependencies'
 pnpm install --frozen-lockfile
+
+step 'Patch oxlint to use the Effect rules'
+pnpm exec effect-tsrs patch --oxlint

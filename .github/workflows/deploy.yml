@@ -1,0 +1,33 @@
+name: Deploy
+
+# Manual by default: a template should not deploy itself when someone pushes.
+# Set the repository secrets, then run this workflow from Actions.
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || vars.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # `--yes` accepts the state-store bootstrap in CI. The first run may create
+      # the Cloudflare state-store Worker in the same account.
+      - run: pnpm exec alchemy deploy --stage prod --yes

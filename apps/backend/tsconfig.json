@@ -7,7 +7,7 @@
         "name": "@effect/language-service",
         "overrides": [
           {
-            "include": ["src/worker.ts", "src/worker.test.ts"],
+            "include": ["src/handler.ts", "src/worker.ts", "src/worker.test.ts"],
             "options": { "allowedUnstableApis": ["effect/rpc", "effect/http"] }
           }
         ]

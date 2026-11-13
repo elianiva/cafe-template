@@ -8,6 +8,7 @@ allowBuilds:
 overrides:
   effect: 4.0.0
   workerd: 1.20261008.1
+  oxlint-tsgolint: 7.0.2005
 minimumReleaseAgeExclude:
   - '@cloudflare/workers-types@5.20261008.1'
   - '@foldkit/vite-plugin@0.27.0'
@@ -30,11 +31,3 @@ minimumReleaseAgeExclude:
   - '@cloudflare/workerd-windows-64@1.20261008.1'
   - workerd@1.20261008.1
   - '@effect/language-service@0.87.5'
-  - '@effect/tsgo-darwin-arm64@0.53.3'
-  - '@effect/tsgo-darwin-x64@0.53.3'
-  - '@effect/tsgo-linux-arm64@0.53.3'
-  - '@effect/tsgo-linux-arm@0.53.3'
-  - '@effect/tsgo-linux-x64@0.53.3'
-  - '@effect/tsgo-win32-arm64@0.53.3'
-  - '@effect/tsgo-win32-x64@0.53.3'
-  - '@effect/tsgo@0.53.3'

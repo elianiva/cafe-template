@@ -8,13 +8,14 @@ const compatibility = { date: '2026-10-08' }
 
 /**
  * Cloudflare Workers Observability, configured on the host resources only.
- * Sampling at 1 records every request: lower both rates before real traffic.
+ * Sampling at 0.1 keeps one request in ten, enough for a starter and a launch
+ * spike. Raise both rates while you debug a specific request.
  */
 const observability = {
   enabled: true,
-  headSamplingRate: 1,
-  logs: { enabled: true, invocationLogs: true, headSamplingRate: 1, persist: true },
-  traces: { enabled: true, headSamplingRate: 1, persist: true },
+  headSamplingRate: 0.1,
+  logs: { enabled: true, invocationLogs: true, headSamplingRate: 0.1, persist: true },
+  traces: { enabled: true, headSamplingRate: 0.1, persist: true },
 }
 
 const state = Layer.unwrap(
@@ -31,6 +32,8 @@ export default Alchemy.Stack(
     const stage = yield* Alchemy.Stack.use((stack) => Effect.succeed(stack.stage))
     const ApiWorker = Cloudflare.Worker('Api', {
       main: './apps/backend/src/worker.ts',
+      // A stable local URL for the service binding. The website takes 5173.
+      dev: { port: 1337 },
       compatibility,
       observability,
       // The website reaches the API through its service binding only. Remove
@@ -40,6 +43,7 @@ export default Alchemy.Stack(
     const Website = Cloudflare.Website.Foldkit('Website', {
       rootDir: stage === 'reference' ? 'examples/reference' : 'apps/web',
       main: 'src/worker.ts',
+      dev: { port: 5173 },
       env: { API: ApiWorker },
       assets: { runWorkerFirst: [`${API_PREFIX}/*`] },
       compatibility,

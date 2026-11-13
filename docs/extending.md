@@ -9,6 +9,8 @@ domain. Use that endpoint as the shape for your own.
 | ------------------------ | ------------------------------------- |
 | Wire contract and errors | `packages/rpc/src`                    |
 | Server-side behavior     | `apps/backend/src/contexts/<context>` |
+| Store and host adapters  | `apps/backend/src/platform`           |
+| Handler composition      | `apps/backend/src/handler.ts`         |
 | Browser state and UI     | `apps/web/src/app`                    |
 | Browser details          | `apps/web/src/entry.ts`               |
 | Deployment and bindings  | `alchemy.run.ts`                      |
@@ -41,10 +43,9 @@ domain. Use that endpoint as the shape for your own.
    })
    ```
 
-4. Call it from the browser. `apps/web` has no RPC client yet; copy the pattern
-   from `examples/reference/src/platform/rpc.ts` into
-   `apps/web/src/platform/rpc.ts`, then provide the layer in
-   `apps/web/src/entry.ts`:
+4. Call it from the browser through `ApiRpc` in
+   `apps/web/src/platform/rpc.ts`. `apps/web/src/entry.ts` already provides the
+   client's layer:
 
    ```ts
    const application = Runtime.makeApplication({
@@ -79,8 +80,8 @@ does not.
 
 ## Add a bounded context
 
-Give the context its own folder, its own RPC group, and its own handler layer,
-then compose them at the edge:
+Give the context its own folder, its own RPC group, a store interface, and a
+handler layer. Then compose them at the edge.
 
 ```ts
 // packages/rpc/src/index.ts
@@ -88,12 +89,39 @@ export class Api extends SystemRpc.merge(NotesRpc) {}
 ```
 
 ```ts
-// apps/backend/src/worker.ts
-Layer.provide(Layer.mergeAll(SystemHandlers, NotesHandlers))
+// apps/backend/src/handler.ts
+export type HandlerInput = Readonly<{
+  system: typeof SystemHandlers
+  notes: typeof NotesHandlers
+}>
+
+const defaults: HandlerInput = {
+  system: SystemHandlers,
+  notes: NotesHandlers,
+}
+
+export const handlerFor = (input: HandlerInput = defaults) =>
+  HttpRouter.toWebHandler(
+    RpcServer.layerHttp({ group: Api, path: RPC_PATH, protocol: 'http' }).pipe(
+      Layer.provide(Layer.mergeAll(input.system, input.notes)),
+      Layer.provideMerge(RpcSerialization.layerJson),
+    ),
+  )
 ```
+
+`worker.ts` stays a thin entry that imports `handler`. A test calls
+`handlerFor` with a fake layer or a fake store, so it never needs the Worker
+runtime.
 
 Do not add a context until a product feature needs it. Empty domains are harder
 to remove than to add.
+
+## Add a store
+
+A context owns the interface it needs, never the D1 or Durable Object type. The
+implementation lives in `apps/backend/src/platform`, and `handler.ts` wires it
+into `handlerFor`. The [D1 recipe](recipes.md#add-a-d1-backed-store) walks
+through the migration, the binding, the adapter, and the test.
 
 ## Verify the change
 
@@ -105,9 +133,10 @@ pnpm build
 ```
 
 `apps/backend/src/worker.test.ts` calls the API Worker through a real RPC client,
-so it fails when the contract, the path, or the handlers stop agreeing.
-`apps/backend/src/contexts/boundary.test.ts` keeps Cloudflare and Alchemy imports,
-and Cloudflare global type names, out of context code.
+so it fails when the contract, the path, or the handlers stop agreeing. It also
+drives a declared `ApiError` across the transport. `apps/backend/src/boundaries.test.ts`
+keeps host imports out of contexts, keeps backend code out of the browser, and
+keeps both apps out of the wire contract.
 
 `pnpm typecheck` also rejects unstable Effect APIs outside their tsconfig
 allowlist. If a new file needs one, add the narrowest matching entry to that
