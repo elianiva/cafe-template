@@ -23,7 +23,7 @@ This repository is a pnpm monorepo for an Effect + Foldkit application deployed 
 - Sentry lives at the app edges: the browser platform module, the Worker entries, and the Effect layers in `handler.ts`. Contexts use `Effect.withSpan` and never import Sentry. `ApiError` stays out of the issue stream.
 - The website Worker rate limit fails open when its binding is missing or throws.
 - Use only `tsrs` and `effect-tsrs` for diagnostics. Never run `tsc` or `tsgo`; do not add `typescript` or turn on `typeCheck` in `vite.config.ts`.
-- If `vp lint` fails after an install that skipped scripts, run `pnpm exec effect-tsrs patch --oxlint`.
+- Effect diagnostics run in `pnpm typecheck`. `vp lint` stays on Vite+'s tsrs backend, so do not patch Oxlint.
 - Run `pnpm rename <name>` once, before the first feature, to replace the template's package scope and stack name.
 
 ## Commands
@@ -33,8 +33,8 @@ This repository is a pnpm monorepo for an Effect + Foldkit application deployed 
 - `pnpm check` runs Vite+ formatting, lint, and configured checks.
 - `pnpm typecheck`, `pnpm test`, and `pnpm build` run through Turbo.
 - `pnpm rename <name>` replaces the template's package scope and stack name.
-- `.agents/setup` prepares a fresh orb: Node 26, pnpm 12, `.env`, dependencies, and the Oxlint patch.
-- `.agents/resume` repairs the hooks, Oxlint patch, and `.env` after an orb wakes. It does not install dependencies.
+- `.agents/setup` prepares a fresh orb: Node 26, pnpm 12, `.env`, and dependencies.
+- `.agents/resume` repairs the hooks and `.env` after an orb wakes. It does not install dependencies.
 - `pnpm deploy` changes Cloudflare infrastructure. Do not run it without explicit approval. The manual `Deploy` workflow does the same thing.
 
 See `docs/architecture.md` and `docs/tooling.md` before changing workspace boundaries or tool ownership. `docs/guardrails.md` lists the rules this repository enforces and the check behind each one. `docs/recipes.md` shows the D1 and binding path, `docs/deploy.md` covers deployment, and `docs/production.md` covers the launch baseline.

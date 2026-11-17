@@ -35,8 +35,4 @@ if [[ -x node_modules/.bin/lefthook ]]; then
   node_modules/.bin/lefthook install >/dev/null
 fi
 
-if [[ -x node_modules/.bin/effect-tsrs ]]; then
-  node_modules/.bin/effect-tsrs patch --oxlint >/dev/null
-fi
-
 echo "Orb ready: Node $(node --version), pnpm $(pnpm --version)."

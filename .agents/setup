@@ -80,9 +80,6 @@ fi
 step 'Install workspace dependencies'
 pnpm install --frozen-lockfile --prefer-offline
 
-step 'Patch Oxlint with the Effect rules'
-pnpm exec effect-tsrs patch --oxlint
-
 step 'Verify the workspace tooling'
 test -x node_modules/.bin/tsrs
 test -x node_modules/.bin/effect-tsrs

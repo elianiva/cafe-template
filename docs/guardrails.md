@@ -39,12 +39,7 @@ Add an allowance only when the unstable call is the point of the file, and keep
 the pattern narrow. Contexts and UI code have no allowance, so unstable Effect
 APIs cannot reach them by accident.
 
-`pnpm install` runs `prepare`, which patches Oxlint with `effect-tsrs`. If
-`vp lint` fails after an install that skipped scripts, run:
-
-```sh
-pnpm exec effect-tsrs patch --oxlint
-```
+`pnpm install` runs `prepare`, which installs the Git hooks. Effect diagnostics run in `pnpm typecheck`, after `tsrs`; they are not patched into Oxlint, so `vp lint` and `vp check` stay on Vite+'s tsrs backend.
 
 ## Review checklist
 

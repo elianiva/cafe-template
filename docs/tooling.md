@@ -10,8 +10,8 @@
 | Vite                       | Web app bundler, integrated into Alchemy's website dev/deploy flow            |
 | Alchemy                    | Local Cloudflare development and deployment through the root `alchemy.run.ts` |
 | Vitest                     | Unit and integration tests                                                    |
-| `tsrs`                     | Rust port of the TypeScript 7 compiler; type checks in `pnpm typecheck`       |
-| `effect-tsrs`              | Effect diagnostics on `tsrs` and the Effect Oxlint preset                     |
+| `tsrs`                     | TypeScript 7 compiler for type checking and Oxlint's type-aware rules         |
+| `effect-tsrs`              | Effect diagnostics in `pnpm typecheck`                                        |
 | `@effect/language-service` | Effect diagnostics config and editor support, including `allowedUnstableApis` |
 | Sentry                     | Browser and Worker errors, traces, profiles, and hidden source-map upload     |
 
@@ -25,7 +25,7 @@ Dependencies are pinned to exact versions in workspace manifests and `pnpm-lock.
 
 `tsrs` and `effect-tsrs` are the only type checkers. The workspace does not install `typescript`. Do not use `tsc` or `tsgo`.
 
-`vp lint` also runs the Effect rules from the `effect-tsrs` recommended Oxlint preset. The root `prepare` script runs `effect-tsrs patch --oxlint`, which replaces the `oxlint-tsgolint` backend with `effect-tsrs`. `effect-tsrs` sends non-Effect type-aware rules to the original tsgolint binary, so `vite.config.ts` turns those rules off. The `oxlint-tsgolint` override in `pnpm-workspace.yaml` pins the version that `effect-tsrs` supports.
+Vite+ 1.7 runs Oxlint's type-aware rules on `tsrs-lint`, the same Rust compiler, so linting needs no extra backend. `effect-tsrs` runs only in `pnpm typecheck`; it does not patch Oxlint, and `vite.config.ts` enables no Effect lint preset.
 
 Unstable Effect APIs fail typecheck unless a tsconfig override allows them for named files. Each override lives beside the code that needs it, for example in `apps/backend/tsconfig.json`. See [Guardrails](guardrails.md) for the rule and the current exceptions.
 
